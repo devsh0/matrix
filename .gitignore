@@ -1,0 +1,7 @@
+*.swo
+*.swp
+exec-*
+object-*
+ncc.sh
+out
+.idea
