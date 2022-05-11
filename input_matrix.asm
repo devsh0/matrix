@@ -1,11 +1,14 @@
+%include "print_matrix.asm"
+
 section .bss
 min_size: equ 1
 max_size: equ 64
 matrix_size: resd 4
 
 section .data
+value: dq 354.53
 scanf_int_fmt: db "%d", 0
-scanf_double_fmt: db "%f", 0
+scanf_double_fmt: db "%lf", 0
 
 section .text
     default rel
@@ -15,16 +18,28 @@ section .text
     global main
 
 section .data
-fmt: db "value = %d", 10, 0
+fmt_int: db "int value = %llu", 10, 0
+fmt_float: db "float value = %f", 10, 0
 
 section .text
 ; (value) ret void
 fn_print_int:
     push rbp
     mov rcx, rdi
-    mov rdi, fmt
+    mov rdi, fmt_int
     mov rsi, rcx
     xor eax, eax
+    call printf wrt ..plt
+    xor eax, eax
+    pop rbp
+    ret
+
+fn_print_double:
+    push rbp
+    mov rcx, rdi
+    mov rdi, fmt_float
+    movsd xmm0, [rcx]
+    mov eax, 1
     call printf wrt ..plt
     xor eax, eax
     pop rbp
@@ -75,24 +90,25 @@ fn_input_row:
     push r14
     sub rsp, 8                  ; align stack
 
-    mov r12, rdi                ; row_base_ptr into r12d
-    mov r13d, esi               ; row_size into r13d
+    mov r12, rdi                ; row_base_ptr into r12
+    mov r13, rsi                ; row_size into r13
     mov rsi, rdx                ; 2nd arg to printf
     add rsi, 1                  ; rsi = row_index + 1
     mov rdi, row_input_prompt   ; 1st arg to printf
     xor eax, eax                ; no vector registers
     call printf wrt ..plt       ; call printf
-    mov r14d, 0                 ; element_index into r14d
+    mov r14, 0                  ; element_index into r14
 
 .input_loop:
     mov rdi, scanf_double_fmt   ; first arg to scanf
-    lea rsi, [r12 + r14 * 8]  ; element_ptr(rsi) = row_base_ptr + (8 * element_index)
+    lea rsi, [r12 + (r14 * 8)]    ; element_ptr(rsi) = row_base_ptr + (8 * element_index)
     xor eax, eax                ; no vector register
     call scanf wrt ..plt        ; call scanf
-    add r14d, 1                 ; increase element_index
-    cmp r13d, r14d              ; check row_size > element_index
+    add r14, 1                  ; increase element_index
+    cmp r13, r14                ; check row_size > element_index
     jg .input_loop              ; jmp .input_loop if true
 
+.exit:
     add rsp, 8
     pop r14
     pop r13
@@ -109,35 +125,44 @@ fn_input_matrix:
     push r13
     push r14
     push r15
+    push rbx    ; delete this
+    sub rsp, 8  ; delete this
 
-    mov r12d, edi    ; matrix_size = row_size into r12d
-    imul edi, edi
-    imul edi, 8
-    mov esi, edi
-    mov edi, scanf_int_fmt
+    mov r12, rdi    ; matrix_size = row_size into r12d
+    imul rdi, rdi
+    imul rdi, 8
     call malloc wrt ..plt
-
-    mov r13, rax            ; load matrix_base_ptr into r13d
-    lea r14d, [r12d * 8]    ; load row_size (in bytes) into r14d
-    mov r15d, 0             ; load row_index into stack
+    mov r13, rax            ; load matrix_base_ptr into r13
+    lea r14, [r12 * 8]      ; load row_size (in bytes) into r14
+    mov r15, 0              ; load row_index into stack
 
 .loop:
-    mov eax, r15d
-    imul eax, r14d
-    lea rdi, [r13 + rax]    ; row_base_ptr into edi
-    mov esi, r12d           ; row_size into esi
-    mov edx, r15d
+    mov rax, r15
+    imul rax, r14
+    mov rbx, rax            ; delete this
+    lea rdi, [r13 + rax]    ; row_base_ptr into rdi
+    mov rsi, r12            ; row_size into rsi
+    mov rdx, r15
     call fn_input_row
-    add r15d, 1
-    cmp r12d, r15d
+
+    mov rdi, fmt_float      ; delete from here {
+    movsd xmm0, [r13 + rbx]
+    mov eax, 1
+    call printf wrt ..plt   ; ...to here }
+
+    add r15, 1
+    cmp r12, r15
     jg .loop
 
 .exit:
+    add rsp, 8      ; delete this
+    pop rbx         ; delete this
     pop r15
     pop r14
     pop r13
     pop r12
     mov rsp, rbp
+    mov rax, r13
     pop rbp
     ret
 
@@ -147,16 +172,22 @@ main:
 
     call fn_input_matrix_geometry
     cmp rax, -1
-    je .input_error
+    je .exit
     mov rdi, rax
     call fn_input_matrix
-    ; Then what?
-    jmp .exit
 
-.input_error:
-    mov rax, 1
+    ; debug this: should print the first input value but isn't
+    mov rdi, fmt_float
+    movsd xmm0, [rax]
+    mov eax, 1
+    call printf wrt ..plt
+;.print_the_matrix:
+;    mov rdi, rax
+;    movsx rsi, dword [matrix_size]
+;    call fn_print_matrix
 
 .exit:
     xor eax, eax
-    add rsp, 8
+    mov rsp, rbp
+    pop rbp
     ret
