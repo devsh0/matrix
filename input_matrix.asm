@@ -1,3 +1,4 @@
+%include "common.asm"
 %include "print_matrix.asm"
 
 section .bss
@@ -6,7 +7,6 @@ max_size: equ 64
 matrix_size: resd 4
 
 section .data
-value: dq 354.53
 scanf_int_fmt: db "%d", 0
 scanf_double_fmt: db "%lf", 0
 
@@ -18,41 +18,13 @@ section .text
     global main
 
 section .data
-fmt_int: db "int value = %llu", 10, 0
-fmt_float: db "float value = %f", 10, 0
-
-section .text
-; (value) ret void
-fn_print_int:
-    push rbp
-    mov rcx, rdi
-    mov rdi, fmt_int
-    mov rsi, rcx
-    xor eax, eax
-    call printf wrt ..plt
-    xor eax, eax
-    pop rbp
-    ret
-
-fn_print_double:
-    push rbp
-    mov rcx, rdi
-    mov rdi, fmt_float
-    movsd xmm0, [rcx]
-    mov eax, 1
-    call printf wrt ..plt
-    xor eax, eax
-    pop rbp
-    ret
-
-section .data
 geometry: db "Enter size of the matrix: ", 0
 err_geometry: db "Matrix size must be between %d-%d inclusive!", 10, 0
 
 section .text
 ; (void) ret matrix_size
 fn_input_matrix_geometry:
-    push rbp
+    prologue
     mov rdi, geometry
     xor eax, eax
     call printf wrt ..plt
@@ -74,7 +46,7 @@ fn_input_matrix_geometry:
     mov rax, -1
 
 .exit:
-    pop rbx
+    epilogue
     ret
 
 section .data
@@ -83,8 +55,7 @@ row_input_prompt: db "Input elements of row #%d: ", 0
 section .text
 ; (row_base_ptr, row_size, row_index) ret void
 fn_input_row:
-    push rbp
-    mov rbp, rsp
+    prologue
     push r12
     push r13
     push r14
@@ -113,14 +84,12 @@ fn_input_row:
     pop r14
     pop r13
     pop r12
-    mov rsp, rbp
-    pop rbp
+    epilogue
     ret
 
 ; (matrix_size) ret matrix_ptr
 fn_input_matrix:
-    push rbp
-    mov rbp, rsp
+    prologue
     push r12
     push r13
     push r14
@@ -151,14 +120,11 @@ fn_input_matrix:
     pop r14
     pop r13
     pop r12
-    mov rsp, rbp
-    pop rbp
+    epilogue
     ret
 
 main:
-    push rbp
-    mov rbp, rsp
-
+    prologue
     call fn_input_matrix_geometry
     cmp rax, -1
     je .exit
@@ -172,6 +138,5 @@ main:
 
 .exit:
     xor eax, eax
-    mov rsp, rbp
-    pop rbp
+    epilogue
     ret

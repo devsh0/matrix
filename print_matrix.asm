@@ -1,11 +1,40 @@
+%include "common.asm"
+
 section .data
-element_fmt: db "%.3f", 9, 0
+fmt_int: db "int value = %llu", 10, 0
+fmt_float: db "float value = %f", 10, 0
+
+section .text
+; (value) ret void
+fn_print_int:
+    prologue
+    mov rcx, rdi
+    mov rdi, fmt_int
+    mov rsi, rcx
+    xor eax, eax
+    call printf wrt ..plt
+    xor eax, eax
+    pop rbp
+    ret
+
+fn_print_double:
+    push rbp
+    mov rcx, rdi
+    mov rdi, fmt_float
+    movsd xmm0, [rcx]
+    mov eax, 1
+    call printf wrt ..plt
+    xor eax, eax
+    epilogue
+    ret
+
+section .data
+fmt_element: db "%.3f", 9, 0
 
 section .text
 ; (row_base_ptr, row_size) ret void
 fn_print_row:
-    push rbp
-    mov rbp, rsp
+    prologue
     push r12
     push r13
     push r14
@@ -16,7 +45,7 @@ fn_print_row:
     mov r14, 0          ; element_index counter
 
 .loop:
-    mov rdi, element_fmt
+    mov rdi, fmt_element
     lea rsi, [r12 + (r14 * 8)]
     movsd xmm0, [rsi]
     mov eax, 1
@@ -30,26 +59,24 @@ fn_print_row:
     pop r14
     pop r13
     pop r12
-    mov rsp, rbp
-    pop rbp
+    epilogue
     ret
 
 section .data
 line_feed: db 10, 0
 
 fn_print_newline:
-    sub rsp, 8
+    prologue
     mov rdi, line_feed
     xor eax, eax
     call printf wrt ..plt
-    add rsp, 8
+    epilogue
     ret
 
 section .text
 ; (matrix_base_ptr, matrix_size) ret void
 fn_print_matrix:
-    push rbp
-    mov rbp, rsp
+    prologue
     push r12
     push r13
     push r14
@@ -60,7 +87,6 @@ fn_print_matrix:
     lea r15, [r13 * 8]          ; row_size_in_bytes
     mov r14, 0                  ; row_index into r14
     mov rdi, r13
-
     call fn_print_newline
 
 .loop:
@@ -80,6 +106,5 @@ fn_print_matrix:
     pop r14
     pop r13
     pop r12
-    mov rsp, rbp
-    pop rbp
+    epilogue
     ret
