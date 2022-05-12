@@ -125,8 +125,6 @@ fn_input_matrix:
     push r13
     push r14
     push r15
-    push rbx    ; delete this
-    sub rsp, 8  ; delete this
 
     mov r12, rdi    ; matrix_size = row_size into r12d
     imul rdi, rdi
@@ -139,30 +137,21 @@ fn_input_matrix:
 .loop:
     mov rax, r15
     imul rax, r14
-    mov rbx, rax            ; delete this
     lea rdi, [r13 + rax]    ; row_base_ptr into rdi
     mov rsi, r12            ; row_size into rsi
     mov rdx, r15
     call fn_input_row
-
-    mov rdi, fmt_float      ; delete from here {
-    movsd xmm0, [r13 + rbx]
-    mov eax, 1
-    call printf wrt ..plt   ; ...to here }
-
     add r15, 1
     cmp r12, r15
     jg .loop
 
 .exit:
-    add rsp, 8      ; delete this
-    pop rbx         ; delete this
+    mov rax, r13
     pop r15
     pop r14
     pop r13
     pop r12
     mov rsp, rbp
-    mov rax, r13
     pop rbp
     ret
 
@@ -176,15 +165,10 @@ main:
     mov rdi, rax
     call fn_input_matrix
 
-    ; debug this: should print the first input value but isn't
-    mov rdi, fmt_float
-    movsd xmm0, [rax]
-    mov eax, 1
-    call printf wrt ..plt
-;.print_the_matrix:
-;    mov rdi, rax
-;    movsx rsi, dword [matrix_size]
-;    call fn_print_matrix
+.print_the_matrix:
+    mov rdi, rax
+    mov esi, dword [matrix_size]
+    call fn_print_matrix
 
 .exit:
     xor eax, eax
