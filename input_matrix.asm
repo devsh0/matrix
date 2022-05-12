@@ -1,14 +1,14 @@
-%include "common.asm"
-%include "print_matrix.asm"
+%include "common.inc"
+%include "print.asm"
 
 section .bss
-min_size: equ 1
-max_size: equ 64
-matrix_size: resd 4
+    min_msize: equ 1
+    max_msize: equ 64
+    matrix_size: resd 4
 
 section .data
-scanf_int_fmt: db "%d", 0
-scanf_double_fmt: db "%lf", 0
+    scanf_int_fmt: db "%d", 0
+    scanf_double_fmt: db "%lf", 0
 
 section .text
     default rel
@@ -18,29 +18,30 @@ section .text
     global main
 
 section .data
-geometry: db "Enter size of the matrix: ", 0
-err_geometry: db "Matrix size must be between %d-%d inclusive!", 10, 0
+    msize_prompt: db "Enter size of the matrix: ", 0
+    fmt_err_msize: db "Matrix size must be between %d-%d inclusive!", 10, 0
 
 section .text
-; (void) ret matrix_size
-fn_input_matrix_geometry:
+; in: none
+; out: matrix_size
+fn_input_matrix_size:
     prologue
-    mov rdi, geometry
+    mov rdi, msize_prompt
     xor eax, eax
     call printf wrt ..plt
     mov rdi, scanf_int_fmt
     mov rsi, matrix_size
     call scanf wrt ..plt
     mov eax, dword [matrix_size]
-    cmp eax, min_size
+    cmp eax, min_msize
     jl .input_err
-    cmp eax, max_size
+    cmp eax, max_msize
     jle .exit
 
 .input_err:
-    mov rdi, err_geometry
-    mov rsi, min_size
-    mov rdx, max_size
+    mov rdi, fmt_err_msize
+    mov rsi, min_msize
+    mov rdx, max_msize
     xor eax, eax
     call printf wrt ..plt
     mov rax, -1
@@ -50,10 +51,11 @@ fn_input_matrix_geometry:
     ret
 
 section .data
-row_input_prompt: db "Input elements of row #%d: ", 0
+    row_prompt: db "Input elements of row #%d: ", 0
 
 section .text
-; (row_base_ptr, row_size, row_index) ret void
+; in: row_base_ptr, row_size, row_index
+; out: none
 fn_input_row:
     prologue
     save r12, r13, r14
@@ -63,14 +65,14 @@ fn_input_row:
     mov r13, rsi                ; row_size into r13
     mov rsi, rdx                ; 2nd arg to printf
     add rsi, 1                  ; rsi = row_index + 1
-    mov rdi, row_input_prompt   ; 1st arg to printf
+    mov rdi, row_prompt         ; 1st arg to printf
     xor eax, eax                ; no vector registers
     call printf wrt ..plt       ; call printf
     mov r14, 0                  ; element_index into r14
 
 .input_loop:
     mov rdi, scanf_double_fmt   ; first arg to scanf
-    lea rsi, [r12 + (r14 * 8)]    ; element_ptr(rsi) = row_base_ptr + (8 * element_index)
+    lea rsi, [r12 + r14 * 8]    ; element_ptr(rsi) = row_base_ptr + (8 * element_index)
     xor eax, eax                ; no vector register
     call scanf wrt ..plt        ; call scanf
     add r14, 1                  ; increase element_index
@@ -83,15 +85,16 @@ fn_input_row:
     epilogue
     ret
 
-; (matrix_size) ret matrix_ptr
+; in: matrix_size
+; out: matrix_ptr
 fn_input_matrix:
     prologue
     save r12, r13, r14, r15
 
-    mov r12, rdi    ; matrix_size = row_size into r12
-    imul rdi, rdi
-    imul rdi, 8
-    call malloc wrt ..plt
+    mov r12, rdi            ; matrix_size = row_size into r12
+    imul rdi, rdi           ; rdi *= rdi
+    shl rdi, 3              ; rdi *= 8
+    call malloc wrt ..plt   ; allocate buffer for matrix
     mov r13, rax            ; load matrix_base_ptr into r13
     lea r14, [r12 * 8]      ; load row_size (in bytes) into r14
     mov r15, 0              ; load row_index into r15
@@ -101,8 +104,8 @@ fn_input_matrix:
     imul rax, r14
     lea rdi, [r13 + rax]    ; row_base_ptr into rdi
     mov rsi, r12            ; row_size into rsi
-    mov rdx, r15
-    call fn_input_row
+    mov rdx, r15            ; row_index into rdx
+    call fn_input_row       ; input an entire row
     add r15, 1
     cmp r12, r15
     jg .loop
@@ -115,7 +118,7 @@ fn_input_matrix:
 
 main:
     prologue
-    call fn_input_matrix_geometry
+    call fn_input_matrix_size
     cmp rax, -1
     je .exit
     mov rdi, rax
