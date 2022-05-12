@@ -14,11 +14,11 @@ fn_print_int:
     xor eax, eax
     call printf wrt ..plt
     xor eax, eax
-    pop rbp
+    epilogue
     ret
 
 fn_print_double:
-    push rbp
+    prologue
     mov rcx, rdi
     mov rdi, fmt_float
     movsd xmm0, [rcx]
@@ -35,9 +35,7 @@ section .text
 ; (row_base_ptr, row_size) ret void
 fn_print_row:
     prologue
-    push r12
-    push r13
-    push r14
+    save r12, r13, r14
     sub rsp, 8
 
     mov r12, rdi        ; row_base_ptr into r12 = 0x405ac0
@@ -56,9 +54,7 @@ fn_print_row:
 
     xor eax, eax
     add rsp, 8
-    pop r14
-    pop r13
-    pop r12
+    restore r14, r13, r12
     epilogue
     ret
 
@@ -77,10 +73,7 @@ section .text
 ; (matrix_base_ptr, matrix_size) ret void
 fn_print_matrix:
     prologue
-    push r12
-    push r13
-    push r14
-    push r15
+    save r12, r13, r14, r15
 
     mov r12, rdi                ; matrix_base_ptr into r12
     mov r13, rsi                ; row_size into r13
@@ -102,9 +95,6 @@ fn_print_matrix:
 
 .exit:
     xor eax, eax
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+    restore r15, r14, r13, r12
     epilogue
     ret

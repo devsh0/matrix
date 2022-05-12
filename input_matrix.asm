@@ -56,9 +56,7 @@ section .text
 ; (row_base_ptr, row_size, row_index) ret void
 fn_input_row:
     prologue
-    push r12
-    push r13
-    push r14
+    save r12, r13, r14
     sub rsp, 8                  ; align stack
 
     mov r12, rdi                ; row_base_ptr into r12
@@ -81,27 +79,22 @@ fn_input_row:
 
 .exit:
     add rsp, 8
-    pop r14
-    pop r13
-    pop r12
+    restore r14, r13, r12
     epilogue
     ret
 
 ; (matrix_size) ret matrix_ptr
 fn_input_matrix:
     prologue
-    push r12
-    push r13
-    push r14
-    push r15
+    save r12, r13, r14, r15
 
-    mov r12, rdi    ; matrix_size = row_size into r12d
+    mov r12, rdi    ; matrix_size = row_size into r12
     imul rdi, rdi
     imul rdi, 8
     call malloc wrt ..plt
     mov r13, rax            ; load matrix_base_ptr into r13
     lea r14, [r12 * 8]      ; load row_size (in bytes) into r14
-    mov r15, 0              ; load row_index into stack
+    mov r15, 0              ; load row_index into r15
 
 .loop:
     mov rax, r15
@@ -116,10 +109,7 @@ fn_input_matrix:
 
 .exit:
     mov rax, r13
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+    restore r15, r14, r13, r12
     epilogue
     ret
 
