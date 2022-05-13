@@ -23,4 +23,14 @@
             %rotate 1
         %endrep
     %endmacro
+
+section .bss
+    min_dim: equ 1
+    max_dim: equ 64
+    dim_ptr: resd 1
+
+    struc Matrix
+        mat_ptr: resq 1
+        mat_dim: resd 1
+    endstruc
 %endif
