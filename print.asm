@@ -78,14 +78,14 @@
         ret
 
     section .text
-    ; in: mat_ptr, mat_dim
+    ; in: mat_struct_ptr
     ; out: none
     fn_print_matrix:
         prologue
         save r12, r13, r14, r15
 
-        mov r12, rdi                ; r12 = mat_ptr
-        mov r13, rsi                ; r13 = mat_dim = row_dim
+        mov r12, [rdi + mat_ptr]    ; r12 = mat_ptr
+        mov r13, [rdi + mat_dim]    ; r13 = mat_dim = row_dim
         lea r15, [r13 * 8]          ; r15 = row_size (in bytes)
         mov r14, 0                  ; r14 = row_index
         mov rdi, r13                ; rdi = row_dim
