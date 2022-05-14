@@ -8,6 +8,7 @@
     extern free
 
     %include "common.asm"
+    %include "utils.asm"
     %include "memory.asm"
     %include "input.asm"
     %include "print.asm"

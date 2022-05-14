@@ -3,12 +3,12 @@ section .data
     scanf_double_fmt: db "%lf", 0
 
 section .data
-    dim_prompt: db "Matrix dimension: ", 0
-    fmt_err_dim: db "Dimension must be between %d-%d inclusive!", 10, 0
+    dim_prompt: db 10, "Matrix dimension: ", 0
+    fmt_err_dim: db 10, "Dimension must be between %d-%d inclusive!", 10, 0
 
 section .text
 ; in: void
-; out: mat_dim
+; out: mat_dim (0 indicates failure)
 fn_input_dim:
     sub rsp, 8
 
@@ -32,14 +32,14 @@ fn_input_dim:
     mov rdx, max_dim
     xor eax, eax
     call printf wrt ..plt
-    mov rax, -1
+    xor eax, eax
 
 .exit:
     add rsp, 8
     ret
 
 section .data
-    row_prompt: db "Elements of row #%d: ", 0
+    row_prompt: db 10, "Elements of row #%d: ", 0
 
 section .text
 ; in: row_ptr, row_dim, row_index
@@ -74,18 +74,14 @@ fn_input_row:
     ret
 
 ; in: void
-; out: mat_struct_ptr
+; out: mat_struct_ptr (0 indicates failure)
 fn_input_matrix:
     prologue
     pushmany rbx, r13, r14, r15
 
     call fn_input_dim           ; input mat_dim
-    cmp eax, -1
-    jne .allocate
-    xor eax, eax
-    jmp .exit
-
-.allocate:
+    test eax, eax
+    jz .exit
     movsx rdi, eax
     call fn_alloc_matrix
     mov rbx, rax                ; rbx = mat_struct_ptr

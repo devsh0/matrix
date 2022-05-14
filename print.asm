@@ -28,7 +28,7 @@ fn_print_int:
     epilogue
     ret
 
-; in: fp_val
+; in: fp_ptr
 ; out: void
 fn_print_double:
     prologue
