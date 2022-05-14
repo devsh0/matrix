@@ -89,7 +89,7 @@ fn_input_row:
     epilogue
     ret
 
-; in: mat_dim
+; in: void
 ; out: mat_struct_ptr
 fn_input_matrix:
     prologue
