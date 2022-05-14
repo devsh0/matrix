@@ -81,8 +81,11 @@ fn_input_matrix:
 
     call fn_input_dim           ; input mat_dim
     cmp eax, -1
-    je .exit
+    jne .allocate
+    xor eax, eax
+    jmp .exit
 
+.allocate:
     movsx rdi, eax
     call fn_alloc_matrix
     mov rbx, rax                ; rbx = mat_struct_ptr
@@ -102,9 +105,9 @@ fn_input_matrix:
     add r15, 1                  ; increase row_index
     cmp [rbx + mat_dim], r15    ; if mat_dim > row_index
     jg .loop                    ; then goto .loop
+    mov rax, rbx
 
 .exit:
-    mov rax, rbx
     popmany r15, r14, r13, rbx
     epilogue
     ret
