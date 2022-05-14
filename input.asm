@@ -1,40 +1,26 @@
-%include "common.asm"
-%include "print.asm"
-
 section .data
     scanf_int_fmt: db "%d", 0
     scanf_double_fmt: db "%lf", 0
-
-section .text
-    default rel
-    extern scanf
-    extern printf
-    extern malloc
-    global main
 
 section .data
     dim_prompt: db "Matrix dimension: ", 0
     fmt_err_dim: db "Dimension must be between %d-%d inclusive!", 10, 0
 
 section .text
-; in: mat_struct_ptr
-; out: void
+; in: void
+; out: mat_dim
 fn_input_dim:
-    prologue
-    save r12
     sub rsp, 8
-
-    mov r12, rdi                        ; r12 = mat_struct_ptr
 
     ; input mat_dim
     mov rdi, dim_prompt
     xor eax, eax
     call printf wrt ..plt
     mov rdi, scanf_int_fmt
-    lea rsi, [r12 + mat_dim]
+    lea rsi, [rsp + 4]
     call scanf wrt ..plt
 
-    mov eax, dword [r12 + mat_dim]      ; eax = mat_dim
+    mov eax, dword [rsp + 4]            ; eax = mat_dim
     cmp eax, min_dim                    ; check mat_dim < min_dim
     jl .error                           ; if true, goto .error
     cmp eax, max_dim                    ; check mat_dim <= max_dim
@@ -50,8 +36,6 @@ fn_input_dim:
 
 .exit:
     add rsp, 8
-    restore r12
-    epilogue
     ret
 
 section .data
@@ -62,7 +46,7 @@ section .text
 ; out: void
 fn_input_row:
     prologue
-    save r12, r13, r14
+    pushmany r12, r13, r14
     sub rsp, 8                  ; align stack
 
     mov r12, rdi                ; r12 = row_ptr
@@ -85,7 +69,7 @@ fn_input_row:
 
 .exit:
     add rsp, 8
-    restore r14, r13, r12
+    popmany r14, r13, r12
     epilogue
     ret
 
@@ -93,40 +77,34 @@ fn_input_row:
 ; out: mat_struct_ptr
 fn_input_matrix:
     prologue
-    save rbx, r12, r13, r14, r15
-    sub rsp, 8
+    pushmany rbx, r13, r14, r15
 
-    mov rdi, Matrix_size        ; rdi = mat_struct_size (in bytes)
-    call malloc wrt ..plt       ; allocate mat_struct; rax = mat_struct_ptr
+    call fn_input_dim           ; input mat_dim
+    cmp eax, -1
+    je .exit
+
+    movsx rdi, eax
+    call fn_alloc_matrix
     mov rbx, rax                ; rbx = mat_struct_ptr
 
-    mov rdi, rbx                ; rdi = mat_struct_ptr
-    call fn_input_dim           ; input mat_dim
-
-    mov r12, [rbx + mat_dim]    ; r12 = row_dim = mat_dim
-    mov rdi, r12                ; rdi = mat_dim
-    imul rdi, rdi               ; rdi *= rdi = pow(mat_dim, 2)
-    shl rdi, 3                  ; rdi *= 8 = mat_size (in bytes)
-    call malloc wrt ..plt       ; allocate buffer for matrix, mat_ptr in eax
-    mov [rbx + mat_ptr], rax    ; Matrix.mat_ptr = mat_ptr
-    mov r13, rax                ; r13 = mat_ptr
-    lea r14, [r12 * 8]          ; r14 = row_size (in bytes)
+    mov r13, [rbx + mat_ptr]    ; r13 = mat_ptr
+    mov r14, [rbx + mat_dim]    ; r14 = row_dim = mat_dim
+    shl r14, 3                  ; r14 = row_size (in bytes)
     mov r15, 0                  ; r15 = row_index
 
 .loop:
     mov rax, r15                ; rax = row_index
     imul rax, r14               ; rax = row_index * row_size
     lea rdi, [r13 + rax]        ; rdi = row_ptr = mat_ptr + (row_index * row_size)
-    mov rsi, r12                ; rsi = row_dim
+    mov rsi, [rbx + mat_dim]    ; rsi = row_dim = mat_dim
     mov rdx, r15                ; rdx = row_index
     call fn_input_row           ; input an entire row
     add r15, 1                  ; increase row_index
-    cmp r12, r15                ; if mat_dim > row_index
+    cmp [rbx + mat_dim], r15    ; if mat_dim > row_index
     jg .loop                    ; then goto .loop
 
 .exit:
     mov rax, rbx
-    add rsp, 8
-    restore r15, r14, r13, r12, rbx
+    popmany r15, r14, r13, rbx
     epilogue
     ret

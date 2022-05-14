@@ -1,20 +1,19 @@
-%include "common.asm"
-%include "input.asm"
-%include "print.asm"
+%include "header.inc"
 
 section .text
-    default rel
     global main
 
 main:
-    prologue
-    mov rdi, rax                ; rdi = mat_dim
+    push rbx
     call fn_input_matrix        ; input matrix
+    mov rbx, rax                ; allocate matrix; rbx = mat_struct_ptr
 
-    mov rdi, rax                ; rdi = mat_struct_ptr
+    mov rdi, rbx                ; rdi = mat_struct_ptr
     call fn_print_matrix        ; print the matrix
 
+    mov rdi, rbx                ; rdi = mat_struct_ptr
+    call fn_free_matrix         ; free matrix
 .exit:
     xor eax, eax
-    epilogue
+    pop rbx
     ret

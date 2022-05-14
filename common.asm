@@ -10,14 +10,14 @@
         pop rbp
     %endmacro
 
-    %macro save 1-*
+    %macro pushmany 1-*
         %rep %0
             push %1
             %rotate 1
         %endrep
     %endmacro
 
-    %macro restore 1-*
+    %macro popmany 1-*
         %rep %0
             pop %1
             %rotate 1
