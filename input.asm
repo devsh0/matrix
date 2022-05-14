@@ -1,4 +1,4 @@
-%include "common.inc"
+%include "common.asm"
 %include "print.asm"
 
 section .data
@@ -128,18 +128,5 @@ fn_input_matrix:
     mov rax, rbx
     add rsp, 8
     restore r15, r14, r13, r12, rbx
-    epilogue
-    ret
-
-main:
-    prologue
-    mov rdi, rax                ; rdi = mat_dim
-    call fn_input_matrix        ; input matrix
-
-    mov rdi, rax                ; rdi = mat_struct_ptr
-    call fn_print_matrix        ; print the matrix
-
-.exit:
-    xor eax, eax
     epilogue
     ret

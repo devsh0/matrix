@@ -1,6 +1,6 @@
 %ifndef __PRINT__
     %define __PRINT__
-    %include "common.inc"
+    %include "common.asm"
 
     section .data
             line_feed: db 10, 0
