@@ -92,28 +92,28 @@ fn_dotprod_matrix:
 
     call fn_check_mat_dim
     test rax, rax
-    jnz .prod
+    jnz .alloc_res
     mov rdi, fmt_err_dim_ne
     call printf wrt ..plt
     xor eax, eax
     jmp .exit
 
-.prod:
+.alloc_res:
     mov rdi, r12
     call fn_alloc_matrix        ; allocate res_mat
     mov r11, rax                ; r11 = res_struct_ptr
     mov r15, [rax]              ; r15 = res_mat_ptr
 
+.compute:
     xor r8, r8                  ; r8 = row_iter
     xor r10, r10                ; r10 = col_iter
     mov rdi, r13                ; rdi = mat1_ptr
     mov rsi, r14                ; rsi = mat2_ptr
     pxor xmm2, xmm2             ; xmm2 = res[i, j]
     mov rax, 0                  ; rax = i
-    mov rcx, r12                ; rcx = mat2_dim
-    shl rcx, 3                  ; rcx = stride
+    lea rcx, [r12 * 8]          ; rcx = stride
 
-.loop:
+.next_elem:
     mov r9, rcx
     imul r9, rax
     movsd xmm0, [rdi + rax * 8]
@@ -123,7 +123,7 @@ fn_dotprod_matrix:
     add rax, 1
     cmp rax, r12
     je .next_col
-    jmp .loop
+    jmp .next_elem
 
 .next_col:
     movsd [r15 + r10 * 8], xmm2
@@ -132,8 +132,8 @@ fn_dotprod_matrix:
     add r10, 1
     cmp r10, r12
     je .next_row
-    lea rsi, [rsi + r10 * 8]
-    jmp .loop
+    lea rsi, [r14 + r10 * 8]
+    jmp .next_elem
 
 .next_row:
     lea rdi, [rdi + rcx]
@@ -142,7 +142,7 @@ fn_dotprod_matrix:
     add r8, 1
     add r15, rcx
     cmp r8, r12
-    jne .loop
+    jne .next_elem
     mov rax, r11
 
 .exit:
