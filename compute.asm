@@ -80,7 +80,7 @@ fn_subtract_matrix:
     ret
 
 ; in: mat1_struct_ptr, mat2_struct_ptr
-; out: res_ptr
+; out: res_mat_struct_ptr
 ; description: computes mat1 dot mat2 and stores the result in a new matrix (not in-place)
 fn_dotprod_matrix:
     pushmany r12, r13, r14, r15
@@ -90,6 +90,15 @@ fn_dotprod_matrix:
     mov r13, [rdi + mat_ptr]    ; rdi = mat1_ptr
     mov r14, [rsi + mat_ptr]    ; rsi = mat2_ptr
 
+    call fn_check_mat_dim
+    test rax, rax
+    jnz .prod
+    mov rdi, fmt_err_dim_ne
+    call printf wrt ..plt
+    xor eax, eax
+    jmp .exit
+
+.prod:
     mov rdi, r12
     call fn_alloc_matrix        ; allocate res_mat
     mov r11, rax                ; r11 = res_struct_ptr
