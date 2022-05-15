@@ -49,11 +49,30 @@ fn_test_scale:
     add rsp, 8
     ret
 
-main:
+fn_test_subtract:
     sub rsp, 8
 
-    call fn_test_scale
-    xor eax, eax
+    call fn_input_matrix
+    mov [rsp], rax
+    call fn_input_matrix
+
+    mov rdi, [rsp]
+    mov rsi, rax
+    call fn_subtract_matrix
+
+    test eax, eax
+    jz .exit
+
+    mov rdi, rax
+    call fn_print_matrix
+
+.exit:
+    add rsp, 8
+    ret
+
+main:
+    sub rsp, 8
+    call fn_test_subtract
 
 .exit:
     add rsp, 8

@@ -2,15 +2,15 @@ section .data
     fmt_err_dim_ne: db 10, "Operand dimensions don't match!", 10, 0
 
 section .text
-; in: mat1_struct_ptr, mat1_struct_ptr
-; out: res_ptr
+; in: mat1_struct_ptr, mat2_struct_ptr
+; out: res_ptr (mat2_struct_ptr)
 ; description: adds two matrices and stores the result in the second matrix
 fn_add_matrix:
     prologue
     pushmany r12, r13
 
     mov r12, rdi            ; r12 = mat1_struct_ptr
-    mov r13, rsi            ; r13 = mat1_struct_ptr
+    mov r13, rsi            ; r13 = mat2_struct_ptr
 
     call fn_check_mat_dim
     test eax, eax
@@ -40,10 +40,10 @@ fn_add_matrix:
     epilogue
     ret
 
-; in: mat_struct_ptr(rdi), scale_factor(xmm0)
-; out: mat_struct_ptr
+; in: mat_struct_ptr (rdi), scale_factor (xmm0)
+; out: res_ptr (mat_struct_ptr)
 fn_scale_matrix:
-    mov r8, rdi
+    mov r8, rdi                     ; r8 = 0x405b10
     mov rsi, [rdi + mat_dim]        ; rsi = mat_dim
     imul rsi, rsi                   ; rsi = elem_index + 1
     mov rdi, [rdi + mat_ptr]        ; rdi = mat_ptr
@@ -59,4 +59,23 @@ fn_scale_matrix:
 
 .exit:
     mov rax, r8
+    ret
+
+; in: mat1_struct_ptr, mat2_struct_ptr
+; out: res_ptr (mat_2_struct_ptr)
+; description: subtracts mat2 from mat1 and stores result in mat2
+fn_subtract_matrix:
+    sub rsp, 8
+    mov [rsp], rdi
+
+    mov rdi, rsi                ; rdi = mat2_struct_ptr
+    mov r8, -1
+    cvtsi2sd xmm0, r8           ; xmm0 = -1
+    call fn_scale_matrix        ; mat2 is now scaled by -1
+
+    mov rdi, [rsp]
+    mov rsi, rax
+    call fn_add_matrix
+
+    add rsp, 8
     ret
