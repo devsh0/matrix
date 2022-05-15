@@ -8,22 +8,25 @@ section .text
     global main
 
 main:
-    push rbx
+    sub rsp, 24
+
     call fn_input_matrix        ; input matrix
-    test eax, eax
-    jnz .print
-    mov eax, 1
-    jmp .exit
+    test rax, rax
+    jz .exit
+    mov [rsp + 16], rax         ; [rsp + 16] = mat1_struct_ptr
 
-.print:
-    mov rbx, rax                ; rbx = mat_struct_ptr
-    mov rdi, rbx                ; rdi = mat_struct_ptr
-    call fn_print_matrix        ; print the matrix
+    call fn_input_matrix
+    test rax, rax
+    jz .exit
+    mov [rsp + 8], rax          ; [rsp + 8] = mat2_struct_ptr
 
-    mov rdi, rbx                ; rdi = mat_struct_ptr
-    call fn_free_matrix         ; free matrix
+    mov rdi, [rsp + 16]
+    mov rsi, [rsp + 8]
+    call fn_add_matrix
+    test rax, rax
+    jz .exit
     xor eax, eax
 
 .exit:
-    pop rbx
+    add rsp, 24
     ret

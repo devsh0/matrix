@@ -12,4 +12,5 @@
     %include "memory.asm"
     %include "input.asm"
     %include "print.asm"
+    %include "compute.asm"
 %endif
