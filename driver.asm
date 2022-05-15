@@ -26,18 +26,34 @@ fn_test_add:
     test rax, rax
     jz .exit
 
+    mov rdi, rax
+    call fn_print_matrix
+
 .exit:
     add rsp, 24
     ret
 
-main:
+fn_test_scale:
     sub rsp, 8
-    call fn_test_add
-    test rax, rax
-    jz .exit
+    call fn_input_matrix
+
+    mov rdi, rax
+    mov qword [rsp], -1
+    cvtsi2sd xmm0, qword [rsp]
+    call fn_scale_matrix
 
     mov rdi, rax
     call fn_print_matrix
+
+.exit:
+    add rsp, 8
+    ret
+
+main:
+    sub rsp, 8
+
+    call fn_test_scale
+    xor eax, eax
 
 .exit:
     add rsp, 8

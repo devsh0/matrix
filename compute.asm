@@ -39,3 +39,24 @@ fn_add_matrix:
     popmany r13, r12
     epilogue
     ret
+
+; in: mat_struct_ptr(rdi), scale_factor(xmm0)
+; out: mat_struct_ptr
+fn_scale_matrix:
+    mov r8, rdi
+    mov rsi, [rdi + mat_dim]        ; rsi = mat_dim
+    imul rsi, rsi                   ; rsi = elem_index + 1
+    mov rdi, [rdi + mat_ptr]        ; rdi = mat_ptr
+
+    ; memory address of the current element = rdi + (rsi * 8) - 8
+.loop:
+    movsd xmm1, [rdi + (rsi * 8) - 8]
+    mulsd xmm1, xmm0
+    movsd [rdi + (rsi * 8) - 8], xmm1
+    sub rsi, 1
+    test rsi, rsi
+    jnz .loop
+
+.exit:
+    mov rax, r8
+    ret
