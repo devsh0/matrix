@@ -70,9 +70,27 @@ fn_test_subtract:
     add rsp, 8
     ret
 
+fn_test_dotprod:
+    sub rsp, 8
+    call fn_input_matrix
+    mov [rsp], rax
+    call fn_input_matrix
+
+    mov rsi, rax
+    mov rdi, [rsp]
+    call fn_dotprod_matrix
+    test rax, rax
+    jz .exit
+    mov rdi, rax
+    call fn_print_matrix
+
+.exit:
+    add rsp, 8
+    ret
+
 main:
     sub rsp, 8
-    call fn_test_subtract
+    call fn_test_dotprod
 
 .exit:
     add rsp, 8
