@@ -15,9 +15,10 @@ fn_add_matrix:
     call fn_check_mat_dim
     test eax, eax
     jnz .add
-    xor eax, eax
     mov rdi, fmt_err_dim_ne
     call printf wrt ..plt
+    xor eax, eax
+    jmp .exit
 
 .add:
     mov rdi, [r12 + mat_dim]

@@ -7,7 +7,7 @@ section .data
 section .text
     global main
 
-main:
+fn_test_add:
     sub rsp, 24
 
     call fn_input_matrix        ; input matrix
@@ -25,8 +25,20 @@ main:
     call fn_add_matrix
     test rax, rax
     jz .exit
-    xor eax, eax
 
 .exit:
     add rsp, 24
+    ret
+
+main:
+    sub rsp, 8
+    call fn_test_add
+    test rax, rax
+    jz .exit
+
+    mov rdi, rax
+    call fn_print_matrix
+
+.exit:
+    add rsp, 8
     ret
