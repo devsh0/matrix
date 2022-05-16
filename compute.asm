@@ -149,28 +149,3 @@ fn_dotprod_matrix:
     add rsp, 8
     popmany r15, r14, r13, r12
     ret
-
-; in: mat_struct_ptr
-; out: mat_struct_ptr
-fn_transpose_matrix:
-    mov r8, rdi
-    mov rcx, [r8 + mat_dim]     ; rcx = mat_dim
-    lea r9, [rcx * 8]           ; r9 = row_size = col_size (in bytes)
-    mov rax, [rax + mat_ptr]    ; rax = mat_ptr
-    xor rdi, rdi                ; rdi = 0
-    xor rsi, rsi                ; rsi = 0
-
-.loop:
-    movsd xmm0, [rax + 8 * rdi]
-    mov rsi, r9
-    imul rsi, rdi
-    movsd xmm1, [rax + rsi]
-    movsd [rax + 8 * rdi], xmm1
-    movsd [rax + rsi], xmm0
-    add rdi, 1
-    cmp rdi, r9
-    jne .loop
-    mov rax, r8
-
-.exit:
-    ret
